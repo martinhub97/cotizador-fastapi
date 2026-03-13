@@ -5,11 +5,11 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-PG_USER = os.getenv("PG_USER", "postgres")
-PG_PWD = os.getenv("PG_PWD", "tupassword")
-PG_HOST = os.getenv("PG_HOST", "localhost")
-PG_PORT = os.getenv("PG_PORT", "5432")
-PG_DB = os.getenv("PG_DB", "postgres")
+PG_USER = os.getenv("PG_USER")
+PG_PWD = os.getenv("PG_PWD")
+PG_HOST = os.getenv("PG_HOST")
+PG_PORT = os.getenv("PG_PORT")
+PG_DB = os.getenv("PG_DB")
 PG_SCHEMA = os.getenv("PG_SCHEMA", "public")
 
 # Construir URL de conexión para psycopg2
