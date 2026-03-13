@@ -11,8 +11,9 @@ class ExcelDataStore:
 excel_store = ExcelDataStore()
 
 def load_excel_data():
-    # Usamos ruta absoluta hardcodeada temporalmente para evitar problemas de pathing
-    ruta_archivo = r"C:\Users\marti\OneDrive - Colcarmerbus S.A\Escritorio\Conjuntos\Agus\Inventario Equipamientos.xlsm"
+    # Detectamos la carpeta donde está este archivo y buscamos el Excel en la raíz del proyecto
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    ruta_archivo = os.path.join(base_dir, 'Inventario Equipamientos.xlsm')
     
     print(f"Cargando Excel a memoria desde: {ruta_archivo}...")
     try:
