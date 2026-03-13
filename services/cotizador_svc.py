@@ -247,6 +247,10 @@ def cotizador(items, dolar_hoy=None, inflacion=0.0):
 
 
 def procesar_cotizacion(req: CotizacionRequest, db: Session):
+    # Carga perezosa del Excel si aún no está en memoria
+    from services.excel_service import load_excel_data
+    load_excel_data()
+
     # Validar y resolver
     precios_obtenidos, mapa, source_map, original_map, date_map = cotizador(
         items=req.codigos_items, 

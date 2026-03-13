@@ -15,10 +15,8 @@ except Exception as e:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Cargar DataFrames en memoria al iniciar
-    load_excel_data()
+    # Ya no cargamos aquí para no bloquear el inicio de Render
     yield
-    # Limpiar recursos al apagar
     pass
 
 app = FastAPI(
