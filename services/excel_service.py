@@ -27,10 +27,13 @@ def load_excel_data():
     print(f"Cargando Excel a memoria (en segundo plano) desde: {ruta_archivo}...")
     try:
         excel_store.df_pc = pd.read_excel(ruta_archivo, sheet_name='Líneas de PC (Compras)')
-        excel_store.df_ci = pd.read_excel(ruta_archivo, sheet_name='Costo indirecto (Items)')
-        excel_store.df_fab = pd.read_excel(ruta_archivo, sheet_name='Fabricación')
-        excel_store.df_rec = pd.read_excel(ruta_archivo, sheet_name='Recepciones')
-        excel_store.df_salidas = pd.read_excel(ruta_archivo, sheet_name='Salida artículos')
+        excel_store.df_ci = pd.read_excel(ruta_archivo, sheet_name='Costos iniciales')
+        excel_store.df_fab = pd.read_excel(ruta_archivo, sheet_name='FAB (Adm)')
+        try:
+            excel_store.df_rec = pd.read_excel(ruta_archivo, sheet_name='Recepciones de PC (Dep)')
+        except Exception:
+            excel_store.df_rec = pd.DataFrame(columns=['Fecha', 'Número de PC', 'Código de artículo'])
+        excel_store.df_salidas = pd.read_excel(ruta_archivo, sheet_name='Salidas de inventario (Dep)')
         excel_store.is_loaded = True
         print("Excel cargado exitosamente en memoria.")
     except Exception as e:
