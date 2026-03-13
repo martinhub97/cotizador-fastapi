@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cotizador Interno</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Cotizador de Conjuntos y Artículos</h1>
+            <p>Visualiza y exporta rápidamente los costos de tu inventario.</p>
+        </header>
+
+        <main>
+            <section class="form-section">
+                <form id="cotizador-form">
+                    <div class="grid-2-col">
+                        <div class="input-group">
+                            <label for="dolar_hoy">Dólar Hoy ($):</label>
+                            <input type="number" id="dolar_hoy" step="0.01" value="1200.0" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="inflacion">Inflación Mensual (ej 0.05):</label>
+                            <input type="number" id="inflacion" step="0.01" value="0.05" required>
+                        </div>
+                    </div>
+
+                    <div class="grid-2-col">
+                        <div class="input-group">
+                            <label for="conjunto_nombre">Nombre del Conjunto:</label>
+                            <input type="text" id="conjunto_nombre" placeholder="Ej. Chasis A">
+                        </div>
+                        <div class="input-group">
+                            <label for="subconjunto_nombre">Nombre del Subconjunto:</label>
+                            <input type="text" id="subconjunto_nombre" placeholder="Ej. Eléctrico">
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="codigos_items">Códigos de Artículos (Separados por coma o salto de línea):</label>
+                        <textarea id="codigos_items" rows="4" placeholder="E10502200280000&#10;OtroCodigo123" required></textarea>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <label>
+                            <input type="checkbox" id="guardar_db">
+                            Guardar en Base de Datos
+                        </label>
+                        <label>
+                            <input type="checkbox" id="exportar_excel" checked>
+                            Generar y exportar a Excel
+                        </label>
+                    </div>
+
+                    <button type="submit" id="submit-btn">
+                        <span id="btn-text">Cotizar Artículos</span>
+                        <span id="btn-spinner" class="spinner hidden"></span>
+                    </button>
+                    <p id="error-msg" class="error hidden"></p>
+                </form>
+            </section>
+
+            <section class="results-section hidden" id="results-container">
+                <h2>Resultados de Cotización</h2>
+                <div class="table-responsive">
+                    <table id="results-table">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Descripción</th>
+                                <th>Cant. Ut.</th>
+                                <th>Costo Sist.</th>
+                                <th>Fecha Costo</th>
+                                <th>Precio Act.</th>
+                                <th>Costo Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="results-body">
+                            <!-- Filas dinámicas aquí -->
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="6" class="totales-label">Costo Subconjunto Total:</td>
+                                <td id="gran-total">$0.00</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
