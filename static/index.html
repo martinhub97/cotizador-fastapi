@@ -4,94 +4,142 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cotizador Interno</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/style.css?v=2.5">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Cotizador de Conjuntos y Artículos</h1>
-            <p>Visualiza y exporta rápidamente los costos de tu inventario.</p>
+            <h1>Sistema de Cotización</h1>
+            <p>Visualiza y administra los costos de tu inventario.</p>
         </header>
 
+        <div class="tabs-container">
+            <button class="tab-button active" onclick="switchTab('cotizador')">Cotizador</button>
+            <button class="tab-button" onclick="switchTab('admin')">Administración</button>
+        </div>
+
         <main>
-            <section class="form-section">
-                <form id="cotizador-form">
-                    <div class="grid-2-col">
-                        <div class="input-group">
-                            <label for="dolar_hoy">Dólar Hoy ($):</label>
-                            <input type="number" id="dolar_hoy" step="0.01" value="1200.0" required>
+            <!-- SECCIÓN COTIZADOR -->
+            <div id="tab-cotizador" class="tab-content active">
+                <section class="form-section">
+                    <form id="cotizador-form">
+                        <div class="grid-2-col">
+                            <div class="input-group">
+                                <label for="dolar_hoy">Dólar Hoy ($):</label>
+                                <input type="number" id="dolar_hoy" step="0.01" value="1200.0" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="inflacion">Inflación Mensual (ej 0.05):</label>
+                                <input type="number" id="inflacion" step="0.01" value="0.05" required>
+                            </div>
                         </div>
-                        <div class="input-group">
-                            <label for="inflacion">Inflación Mensual (ej 0.05):</label>
-                            <input type="number" id="inflacion" step="0.01" value="0.05" required>
+
+                        <div class="grid-2-col">
+                            <div class="input-group">
+                                <label for="conjunto_nombre">Nombre del Conjunto (Para Guardar DB/Excel):</label>
+                                <input type="text" id="conjunto_nombre" placeholder="Ej. Chasis A">
+                            </div>
+                            <div class="input-group">
+                                <label for="subconjunto_nombre">Nombre del Subconjunto (Para Guardar DB):</label>
+                                <input type="text" id="subconjunto_nombre" placeholder="Ej. Eléctrico">
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="grid-2-col">
                         <div class="input-group">
-                            <label for="conjunto_nombre">Nombre del Conjunto:</label>
-                            <input type="text" id="conjunto_nombre" placeholder="Ej. Chasis A">
+                            <label for="codigos_items">Códigos de Artículos (Separados por coma o salto de línea):</label>
+                            <textarea id="codigos_items" rows="4" placeholder="E10502200280000&#10;OtroCodigo123"></textarea>
                         </div>
+
+                        <div class="action-buttons-container">
+                            <button type="submit" id="submit-btn" class="btn-primary">
+                                <span id="btn-text">Cotizar Artículos a la lista</span>
+                                <span id="btn-spinner" class="spinner hidden"></span>
+                            </button>
+                        </div>
+
+                        <div class="secondary-actions-container">
+                            <button type="button" id="btn-save-db" class="btn-secondary">Guardar en Base de Datos</button>
+                            <button type="button" id="btn-export-excel" class="btn-secondary">Exportar Lista a Excel</button>
+                        </div>
+
+                        <p id="error-msg" class="error hidden"></p>
+                    </form>
+                </section>
+
+                <section class="results-section hidden" id="results-container">
+                    <h2>Resultados de Cotización</h2>
+                    <div class="table-responsive">
+                        <table id="results-table">
+                            <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Descripción</th>
+                                    <th>Cant. Ut.</th>
+                                    <th>Costo Sist.</th>
+                                    <th>Fecha Costo</th>
+                                    <th>Precio Act.</th>
+                                    <th>Costo Total</th>
+                                    <th style="text-align: center;">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="results-body">
+                                <!-- Filas dinámicas aquí -->
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="6" class="totales-label">Costo Subconjunto Total:</td>
+                                    <td id="gran-total">$0.00</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </section>
+            </div>
+
+            <!-- SECCIÓN ADMINISTRACIÓN -->
+            <div id="tab-admin" class="tab-content hidden">
+                <section class="form-section">
+                    <h2>Actualizar Inventario Base</h2>
+                    <p style="margin-bottom: 1.5rem; color: #64748b;">
+                        Sube el archivo Excel actualizado (<code>.xlsm</code> o <code>.xlsx</code>). 
+                        El sistema lo reemplazará inmediatamente y calculará los nuevos precios en tiempo real para las próximas cotizaciones.
+                    </p>
+                    <form id="upload-excel-form">
                         <div class="input-group">
-                            <label for="subconjunto_nombre">Nombre del Subconjunto:</label>
-                            <input type="text" id="subconjunto_nombre" placeholder="Ej. Eléctrico">
+                        <!-- Estado 1: Esperando archivo -->
+                        <div id="upload-idle-state" class="upload-state-container">
+                            <label for="excel_file" class="file-upload-label">
+                                <span class="upload-icon">📁</span>
+                                <span>Seleccionar archivo Excel...</span>
+                            </label>
+                            <input type="file" id="excel_file" accept=".xlsx, .xlsm" required style="display:none;">
                         </div>
-                    </div>
 
-                    <div class="input-group">
-                        <label for="codigos_items">Códigos de Artículos (Separados por coma o salto de línea):</label>
-                        <textarea id="codigos_items" rows="4" placeholder="E10502200280000&#10;OtroCodigo123" required></textarea>
-                    </div>
-
-                    <div class="checkbox-group">
-                        <label>
-                            <input type="checkbox" id="guardar_db">
-                            Guardar en Base de Datos
-                        </label>
-                        <label>
-                            <input type="checkbox" id="exportar_excel" checked>
-                            Generar y exportar a Excel
-                        </label>
-                    </div>
-
-                    <button type="submit" id="submit-btn">
-                        <span id="btn-text">Cotizar Artículos</span>
-                        <span id="btn-spinner" class="spinner hidden"></span>
-                    </button>
-                    <p id="error-msg" class="error hidden"></p>
-                </form>
-            </section>
-
-            <section class="results-section hidden" id="results-container">
-                <h2>Resultados de Cotización</h2>
-                <div class="table-responsive">
-                    <table id="results-table">
-                        <thead>
-                            <tr>
-                                <th>Código</th>
-                                <th>Descripción</th>
-                                <th>Cant. Ut.</th>
-                                <th>Costo Sist.</th>
-                                <th>Fecha Costo</th>
-                                <th>Precio Act.</th>
-                                <th>Costo Total</th>
-                            </tr>
-                        </thead>
-                        <tbody id="results-body">
-                            <!-- Filas dinámicas aquí -->
-                        </tbody>
-                        <tfoot>
-                            <tr>
-                                <td colspan="6" class="totales-label">Costo Subconjunto Total:</td>
-                                <td id="gran-total">$0.00</td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-            </section>
+                        <!-- Estado 2: Archivo seleccionado listo para subir -->
+                        <div id="upload-selected-state" class="upload-state-container hidden">
+                            <div class="selected-file-card">
+                                <div class="selected-file-info">
+                                    <span class="file-icon">📊</span>
+                                    <span id="file-name-display" class="file-name">Inventario.xlsm</span>
+                                </div>
+                                <button type="button" id="btn-change-file" class="btn-text-secondary">Cambiar archivo</button>
+                            </div>
+                        </div>
+                        
+                        <div class="action-buttons-container">
+                            <button type="submit" id="upload-btn" class="btn-primary">
+                                <span id="upload-btn-text">Subir y Actualizar Inventario</span>
+                                <span id="upload-spinner" class="spinner hidden"></span>
+                            </button>
+                        </div>
+                        <p id="upload-msg" style="margin-top: 1rem; text-align: center; font-weight: bold;"></p>
+                    </form>
+                </section>
+            </div>
         </main>
     </div>
 
-    <script src="/static/app.js"></script>
+    <script src="/static/app.js?v=2.6"></script>
 </body>
 </html>

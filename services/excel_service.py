@@ -12,8 +12,8 @@ class ExcelDataStore:
 
 excel_store = ExcelDataStore()
 
-def load_excel_data():
-    if excel_store.is_loaded:
+def load_excel_data(force_reload=False):
+    if excel_store.is_loaded and not force_reload:
         return
         
     # Detectamos la carpeta donde está este archivo y buscamos el Excel en la raíz del proyecto

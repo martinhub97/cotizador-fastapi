@@ -28,6 +28,8 @@ app = FastAPI(
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.include_router(cotizador_router)
+from routers.admin import router as admin_router
+app.include_router(admin_router)
 
 @app.get("/")
 def read_root():
