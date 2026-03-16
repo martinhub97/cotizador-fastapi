@@ -59,7 +59,7 @@ class ArgenStatsService:
         except Exception as e:
             logger.error(f"Error obteniendo dólar de ArgenStats: {e}")
             
-        return self._dolar_cache or 1000.0 # Fallback extremo
+        return self._dolar_cache or 1200.0 # Fallback manual seguro si falla la API
 
     def get_inflation_factor(self, from_date: datetime, to_date: datetime) -> float:
         """
@@ -96,7 +96,7 @@ class ArgenStatsService:
             
         except Exception as e:
             logger.error(f"Error obteniendo inflación de ArgenStats: {e}")
-            return 1.0 # No aplicar inflación si falla
+            return 1.15 # Fallback estimado (15%) si falla la API para no devolver 0
 
 # Instancia única
 argenstats_svc = ArgenStatsService()
