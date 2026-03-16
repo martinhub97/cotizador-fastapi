@@ -61,7 +61,14 @@ class ArgenStatsService:
         except Exception as e:
             logger.error(f"Error obteniendo dólar de ArgenStats: {e}")
             
-        return self._dolar_cache # Fallback manual seguro si falla la API
+        # Si llegamos acá es porque la API falló. 
+        # Si tenemos un caché viejo, lo usamos por seguridad.
+        if self._dolar_cache is not None:
+            return self._dolar_cache
+            
+        # Si no hay caché (reiniciaste recién) y la API falló, NO inventamos un número.
+        # Lanzamos un error explícito.
+        raise ValueError("La API de ArgenStats no responde y no hay valores en caché.")
 
     def get_inflation_factor(self, from_date: datetime, to_date: datetime) -> float:
         """

@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 document.getElementById('cotizador-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    
+
     // UI Elements
     const btnText = document.getElementById('btn-text');
     const spinner = document.getElementById('btn-spinner');
@@ -113,14 +113,14 @@ async function procesarListaCompleta(accion) {
     const btnSave = document.getElementById('btn-save-db');
     const btnExport = document.getElementById('btn-export-excel');
     const btnSubmit = document.getElementById('submit-btn');
-    
+
     btnSave.disabled = true;
     btnExport.disabled = true;
     btnSubmit.disabled = true;
-    
+
     const textoOriginalSave = btnSave.textContent;
     const textoOriginalExport = btnExport.textContent;
-    
+
     if (guardar) btnSave.textContent = "Guardando...";
     if (exportar) btnExport.textContent = "Exportando...";
 
@@ -193,11 +193,11 @@ function renderTable() {
 
     cotizacionAcumulada.forEach((item, index) => {
         const row = document.createElement('tr');
-        
+
         const safeCostoSist = item.costo_unitario_sistema !== null ? formatter.format(item.costo_unitario_sistema) : '-';
         const safePrecioAct = item.precio_actualizado !== null ? formatter.format(item.precio_actualizado) : '-';
         const safeCostoTot = item.costo_total !== null ? formatter.format(item.costo_total) : '-';
-        
+
         if (item.costo_total !== null) totalAcumulado += item.costo_total;
 
         row.innerHTML = `
@@ -227,7 +227,7 @@ function toggleMenu(index, event) {
     event.stopPropagation();
     // Ocultar todos los otros menús primero
     document.querySelectorAll('.dropdown-menu').forEach(menu => menu.classList.add('hidden'));
-    
+
     // Mostrar el menú clickeado
     const menu = document.getElementById(`menu-${index}`);
     menu.classList.toggle('hidden');
@@ -246,11 +246,11 @@ document.addEventListener('click', () => {
 function triggerFileDownload(base64str, conjuntoNombre) {
     const link = document.createElement("a");
     link.href = "data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64," + base64str;
-    
+
     const today = new Date();
     const dateStr = today.toISOString().split('T')[0];
     const safeName = conjuntoNombre.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-    
+
     link.download = `Reporte_${safeName}_${dateStr}.xlsx`;
     document.body.appendChild(link);
     link.click();
@@ -263,7 +263,7 @@ function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(content => {
         content.classList.remove('active');
         // Usamos un pequeño delay para que la transición CSS funcione suave
-        setTimeout(() => content.classList.add('hidden'), 50); 
+        setTimeout(() => content.classList.add('hidden'), 50);
     });
 
     // Deseleccionar todos los botones
@@ -280,7 +280,7 @@ function switchTab(tabId) {
 
     // Seleccionar el botón apretado
     const selectedButton = document.querySelector(`.tab-button[onclick="switchTab('${tabId}')"]`);
-    if(selectedButton) selectedButton.classList.add('active');
+    if (selectedButton) selectedButton.classList.add('active');
 }
 
 // === SUBIDA DE INVENTARIO (ADMINISTRACIÓN) ===
@@ -346,12 +346,12 @@ document.getElementById('upload-excel-form').addEventListener('submit', async (e
         if (response.ok) {
             uploadMsg.style.color = '#10b981'; // Verde éxito
             uploadMsg.textContent = data.mensaje || "¡Inventario actualizado y recargado con éxito!";
-            
+
             // Volver al estado inicial
-            fileInput.value = ""; 
+            fileInput.value = "";
             selectedState.classList.add('hidden');
             idleState.classList.remove('hidden');
-            
+
         } else {
             throw new Error(data.detail || "Error desconocido al procesar el archivo.");
         }
