@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from schemas import CotizacionRequest, CotizacionResponse, ItemCotizadoResponse
 import models
 from services.excel_service import excel_store
+from services.argenstats_svc import argenstats_svc
 
 HISTORIC_DOLAR = 830.25
 
@@ -48,7 +49,10 @@ def get_descripcion_robusta(code):
                 return val
     return ""
 
-def cotizador(items, dolar_hoy=None, inflacion=0.0):
+def cotizador(items, dolar_hoy=None, inflacion_manual=None):
+    # Si no nos pasan dólar, lo buscamos en ArgenStats
+    valor_dolar = float(dolar_hoy) if dolar_hoy is not None else argenstats_svc.get_dolar_hoy()
+    
     cache = {}               
     cache_source = {}        
     cache_original = {}      
@@ -124,16 +128,23 @@ def cotizador(items, dolar_hoy=None, inflacion=0.0):
                         cache_date[code] = fecha_compra
                         dias_diff = (pd.Timestamp.now() - fecha_compra).days
                         meses_diff = dias_diff / 30.44
+                        
                         if meses_diff < 3:
-                            precio = precio * ((1 + inflacion) ** meses_diff)
+                            # INFLACIÓN: Si nos pasaron un valor manual lo usamos (legacy), 
+                            # sino usamos el factor real de ArgenStats.
+                            if inflacion_manual is not None and inflacion_manual > 0:
+                                factor = (1 + inflacion_manual) ** meses_diff
+                            else:
+                                factor = argenstats_svc.get_inflation_factor(fecha_compra, datetime.datetime.now())
+                            
+                            precio = precio * factor
                         else:
-                            if dolar_hoy is not None:
-                                precio = (precio / HISTORIC_DOLAR) * float(dolar_hoy)
+                            # DÓLAR: Usamos el valor resuelto (manual o de ArgenStats)
+                            precio = (precio / HISTORIC_DOLAR) * valor_dolar
                     else:
                         cache_original[code] = float(precio_raw)
                         cache_date[code] = "Sin Fecha"
-                        if dolar_hoy is not None:
-                            precio = (precio / HISTORIC_DOLAR) * float(dolar_hoy)
+                        precio = (precio / HISTORIC_DOLAR) * valor_dolar
 
                     precio = float(round(precio, 2))
                     cache[code] = precio
@@ -255,7 +266,7 @@ def procesar_cotizacion(req: CotizacionRequest, db: Session):
     precios_obtenidos, mapa, source_map, original_map, date_map = cotizador(
         items=req.codigos_items, 
         dolar_hoy=req.dolar_hoy, 
-        inflacion=req.inflacion
+        inflacion_manual=req.inflacion
     )
 
     items_res = []

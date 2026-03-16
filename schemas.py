@@ -3,8 +3,8 @@ from typing import List, Optional
 
 class CotizacionRequest(BaseModel):
     codigos_items: List[str]
-    dolar_hoy: float
-    inflacion: float
+    dolar_hoy: Optional[float] = None
+    inflacion: Optional[float] = None
     conjunto_nombre: Optional[str] = None
     subconjunto_nombre: Optional[str] = None
     guardar_db: bool = False
@@ -25,3 +25,8 @@ class CotizacionResponse(BaseModel):
     subconjunto: Optional[str]
     items: List[ItemCotizadoResponse]
     archivo_descargable: Optional[str] = None
+
+class ArgenStatsParamsResponse(BaseModel):
+    dolar: float
+    inflacion_3m: float # Factor acumulado (1 + inf)
+    mensaje: str

@@ -1,6 +1,22 @@
 let cotizacionAcumulada = [];
 let totalAcumulado = 0;
 
+// === INICIALIZACIÓN: CARGAR PARÁMETROS DE ARGENSTATS ===
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const response = await fetch('/api/v1/admin/params');
+        if (response.ok) {
+            const data = await response.json();
+            document.getElementById('dolar_hoy').value = data.dolar;
+            // Mostramos porcentaje legible (ej: 1.15 -> 15.00 %)
+            const inf_porcentaje = ((data.inflacion_3m - 1) * 100).toFixed(2);
+            document.getElementById('inflacion').value = inf_porcentaje;
+        }
+    } catch (error) {
+        console.error("Error cargando parámetros iniciales:", error);
+    }
+});
+
 document.getElementById('cotizador-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     
@@ -31,8 +47,8 @@ document.getElementById('cotizador-form').addEventListener('submit', async (e) =
 
     const payload = {
         codigos_items: codigosArray,
-        dolar_hoy: parseFloat(document.getElementById('dolar_hoy').value),
-        inflacion: parseFloat(document.getElementById('inflacion').value),
+        dolar_hoy: null, // Forzar automatización en backend
+        inflacion: null, // Forzar automatización en backend
         guardar_db: false,
         exportar_excel: false
     };
@@ -110,8 +126,8 @@ async function procesarListaCompleta(accion) {
 
     const payload = {
         codigos_items: codigosAEnviar, // Enviamos la lista entera desde el array actual
-        dolar_hoy: parseFloat(document.getElementById('dolar_hoy').value),
-        inflacion: parseFloat(document.getElementById('inflacion').value),
+        dolar_hoy: null,
+        inflacion: null,
         conjunto_nombre: conjunto,
         subconjunto_nombre: subconjunto,
         guardar_db: guardar,
