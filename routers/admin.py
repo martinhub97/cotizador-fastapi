@@ -52,4 +52,5 @@ async def get_argenstats_params():
             "mensaje": "Parámetros obtenidos exitosamente de ArgenStats."
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error al obtener parámetros de ArgenStats: {str(e)}")
+        # Atrapamos el ValueError de argenstats_svc y devolvemos un 503 controlado
+        raise HTTPException(status_code=503, detail=f"Servicio de cotización temporalmente no disponible: {str(e)}")
