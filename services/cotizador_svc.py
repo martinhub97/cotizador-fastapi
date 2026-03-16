@@ -50,8 +50,11 @@ def get_descripcion_robusta(code):
     return ""
 
 def cotizador(items, dolar_hoy=None, inflacion_manual=None):
-    # Si no nos pasan dólar, lo buscamos en ArgenStats
-    valor_dolar = float(dolar_hoy) if dolar_hoy is not None else argenstats_svc.get_dolar_hoy()
+    # Si nos pasan dólar (>0), lo usamos. Si no, ArgenStats.
+    if dolar_hoy and float(dolar_hoy) > 0:
+        valor_dolar = float(dolar_hoy)
+    else:
+        valor_dolar = argenstats_svc.get_dolar_hoy()
     
     cache = {}               
     cache_source = {}        
@@ -130,16 +133,16 @@ def cotizador(items, dolar_hoy=None, inflacion_manual=None):
                         meses_diff = dias_diff / 30.44
                         
                         if meses_diff < 3:
-                            # INFLACIÓN: Si nos pasaron un valor manual lo usamos (legacy), 
-                            # sino usamos el factor real de ArgenStats.
-                            if inflacion_manual is not None and inflacion_manual > 0:
-                                factor = (1 + inflacion_manual) ** meses_diff
+                            # INFLACIÓN: Priorizar manual si viene del frontend
+                            # El frontend ya manda inflacion_manual como decimal (ej: 0.15 para 15%)
+                            if inflacion_manual and float(inflacion_manual) > 0:
+                                factor = (1 + float(inflacion_manual)) ** meses_diff
                             else:
-                                factor = argenstats_svc.get_inflation_factor(fecha_compra, datetime.datetime.now())
+                                factor = argenstats_svc.get_inflation_factor(fecha_compra, pd.Timestamp.now())
                             
                             precio = precio * factor
                         else:
-                            # DÓLAR: Usamos el valor resuelto (manual o de ArgenStats)
+                            # DÓLAR: Usamos el valor resuelto
                             precio = (precio / HISTORIC_DOLAR) * valor_dolar
                     else:
                         cache_original[code] = float(precio_raw)

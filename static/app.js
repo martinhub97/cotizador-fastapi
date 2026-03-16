@@ -47,8 +47,8 @@ document.getElementById('cotizador-form').addEventListener('submit', async (e) =
 
     const payload = {
         codigos_items: codigosArray,
-        dolar_hoy: null, // Forzar automatización en backend
-        inflacion: null, // Forzar automatización en backend
+        dolar_hoy: parseFloat(document.getElementById('dolar_hoy').value) || null,
+        inflacion: parseFloat(document.getElementById('inflacion').value) / 100 || null, // Convertimos porcentaje a decimal (ej: 15% -> 0.15)
         guardar_db: false,
         exportar_excel: false
     };
@@ -126,8 +126,8 @@ async function procesarListaCompleta(accion) {
 
     const payload = {
         codigos_items: codigosAEnviar, // Enviamos la lista entera desde el array actual
-        dolar_hoy: null,
-        inflacion: null,
+        dolar_hoy: parseFloat(document.getElementById('dolar_hoy').value) || null,
+        inflacion: parseFloat(document.getElementById('inflacion').value) / 100 || null,
         conjunto_nombre: conjunto,
         subconjunto_nombre: subconjunto,
         guardar_db: guardar,
