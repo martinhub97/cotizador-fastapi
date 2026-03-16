@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const data = await response.json();
             document.getElementById('dolar_hoy').value = data.dolar;
             // Mostramos porcentaje legible (ej: 1.15 -> 15.00 %)
-            const inf_porcentaje = ((data.inflacion_3m - 1) * 100).toFixed(2);
+            const inf_porcentaje = ((data.inflacion_3m - 1) * 100).toFixed(1);
             document.getElementById('inflacion').value = inf_porcentaje;
         }
     } catch (error) {
