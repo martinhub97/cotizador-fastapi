@@ -10,7 +10,7 @@ load_dotenv()
 
 # Configuración
 API_KEY = os.getenv("ARGENSTATS_API_KEY", "as_prod_rYU1SREpFj6BVh6r166RvWdo9ZfxROBU")
-BASE_URL = "https://argenstats.com.ar/api/v1"
+BASE_URL = "https://argenstats.com/api/v1"
 
 logger = logging.getLogger(__name__)
 
