@@ -38,25 +38,25 @@ class ArgenStatsService:
             # ArgenStats suele devolver una lista o un objeto con múltiples tipos.
             # Tomamos el 'oficial' o un promedio si es necesario.
             # Basándonos en usos típicos, suele haber un campo 'data'
-            items = data.get("data", [])
-            for item in items:
-                # El usuario prefiere el Dólar Blue
-                if "BLUE" in item.get("name", "").upper():
-                    # Usamos el averagePrice como pidió
-                    val = item.get("values", {}).get("averagePrice")
-                    if val:
-                        self._dolar_cache = float(val)
-                        self._dolar_last_fetch = now
-                        return self._dolar_cache
+            items = data.get("data", {})
             
-            # Fallback a "Oficial" si no hay Blue
-            for item in items:
-                if "OFICIAL" in item.get("name", "").upper():
-                    val = item.get("values", {}).get("sell") # Del oficial solemos tomar venta
-                    if val:
-                        self._dolar_cache = float(val)
-                        self._dolar_last_fetch = now
-                        return self._dolar_cache
+            # 1. Intentar con el Dólar Blue (preferencia del usuario)
+            blue = items.get("BLUE")
+            if blue:
+                val = blue.get("averagePrice")
+                if val:
+                    self._dolar_cache = float(val)
+                    self._dolar_last_fetch = now
+                    return self._dolar_cache
+            
+            # 2. Fallback al Oficial si no hay Blue
+            oficial = items.get("OFICIAL")
+            if oficial:
+                val = oficial.get("sellPrice") or oficial.get("averagePrice")
+                if val:
+                    self._dolar_cache = float(val)
+                    self._dolar_last_fetch = now
+                    return self._dolar_cache
                     
         except Exception as e:
             logger.error(f"Error obteniendo dólar de ArgenStats: {e}")
