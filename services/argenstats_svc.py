@@ -40,21 +40,23 @@ class ArgenStatsService:
             # Basándonos en usos típicos, suele haber un campo 'data'
             items = data.get("data", [])
             for item in items:
-                if item.get("name") == "Dólar Oficial":
-                    # Usamos la venta
-                    val = item.get("values", {}).get("sell")
+                # El usuario prefiere el Dólar Blue
+                if "BLUE" in item.get("name", "").upper():
+                    # Usamos el averagePrice como pidió
+                    val = item.get("values", {}).get("averagePrice")
                     if val:
                         self._dolar_cache = float(val)
                         self._dolar_last_fetch = now
                         return self._dolar_cache
             
-            # Fallback a cualquier dólar si no encontramos "Oficial"
-            if items:
-                val = items[0].get("values", {}).get("sell")
-                if val:
-                    self._dolar_cache = float(val)
-                    self._dolar_last_fetch = now
-                    return self._dolar_cache
+            # Fallback a "Oficial" si no hay Blue
+            for item in items:
+                if "OFICIAL" in item.get("name", "").upper():
+                    val = item.get("values", {}).get("sell") # Del oficial solemos tomar venta
+                    if val:
+                        self._dolar_cache = float(val)
+                        self._dolar_last_fetch = now
+                        return self._dolar_cache
                     
         except Exception as e:
             logger.error(f"Error obteniendo dólar de ArgenStats: {e}")
