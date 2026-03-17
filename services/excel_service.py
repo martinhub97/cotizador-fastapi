@@ -16,7 +16,7 @@ def load_excel_data(force_reload=False):
     if excel_store.is_loaded and not force_reload:
         return
         
-    # Detectamos la carpeta donde está este archivo y buscamos el Excel en la raíz del proyecto
+    # Detectamos la carpeta donde está este archivo y buscamos el Excel en la raíz
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     ruta_archivo = os.path.join(base_dir, 'Inventario Equipamientos.xlsm')
     
@@ -24,16 +24,21 @@ def load_excel_data(force_reload=False):
         print(f"ERROR: No se encontró el archivo Excel en {ruta_archivo}")
         return
 
-    print(f"Cargando Excel a memoria (en segundo plano) desde: {ruta_archivo}...")
+    print(f"Cargando Excel a memoria desde: {ruta_archivo}...")
     try:
-        excel_store.df_pc = pd.read_excel(ruta_archivo, sheet_name='Líneas de PC (Compras)')
-        excel_store.df_ci = pd.read_excel(ruta_archivo, sheet_name='Costos iniciales')
-        excel_store.df_fab = pd.read_excel(ruta_archivo, sheet_name='FAB (Adm)')
-        try:
-            excel_store.df_rec = pd.read_excel(ruta_archivo, sheet_name='Recepciones de PC (Dep)')
-        except Exception:
-            excel_store.df_rec = pd.DataFrame(columns=['Fecha', 'Número de PC', 'Código de artículo'])
-        excel_store.df_salidas = pd.read_excel(ruta_archivo, sheet_name='Salidas de inventario (Dep)')
+        # OPTIMIZACIÓN: Abrimos el archivo una sola vez
+        with pd.ExcelFile(ruta_archivo) as xls:
+            excel_store.df_pc = pd.read_excel(xls, sheet_name='Líneas de PC (Compras)')
+            excel_store.df_ci = pd.read_excel(xls, sheet_name='Costos iniciales')
+            excel_store.df_fab = pd.read_excel(xls, sheet_name='FAB (Adm)')
+            
+            try:
+                excel_store.df_rec = pd.read_excel(xls, sheet_name='Recepciones de PC (Dep)')
+            except Exception:
+                excel_store.df_rec = pd.DataFrame(columns=['Fecha', 'Número de PC', 'Código de artículo'])
+                
+            excel_store.df_salidas = pd.read_excel(xls, sheet_name='Salidas de inventario (Dep)')
+            
         excel_store.is_loaded = True
         print("Excel cargado exitosamente en memoria.")
     except Exception as e:
