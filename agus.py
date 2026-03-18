@@ -3,7 +3,7 @@ import numbers
 import os        
 import re        
 import datetime
-
+s
 HISTORIC_DOLAR = 830.25  # ya tenías esto
 ruta_archivo2 = r'C:\Users\marti\OneDrive - Colcarmerbus S.A\Escritorio\Conjuntos\Inventario Equipamientos.xlsm'
 df = pd.read_excel(ruta_archivo2)
