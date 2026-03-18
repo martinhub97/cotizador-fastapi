@@ -18,6 +18,7 @@ class ItemCotizadoResponse(BaseModel):
     fecha_costo: str
     precio_actualizado: Optional[float] = None
     costo_total: Optional[float] = None
+    metodo_ajuste: Optional[str] = None
 
 class CotizacionResponse(BaseModel):
     mensaje: str
