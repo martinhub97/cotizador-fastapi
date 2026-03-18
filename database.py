@@ -4,7 +4,7 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 from dotenv import load_dotenv
 
 load_dotenv()
-s
+
 PG_USER = os.getenv("PG_USER")
 PG_PWD = os.getenv("PG_PWD")
 PG_HOST = os.getenv("PG_HOST")
