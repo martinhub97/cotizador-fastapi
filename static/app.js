@@ -197,6 +197,9 @@ function renderTable() {
         const safeCostoSist = item.costo_unitario_sistema !== null ? formatter.format(item.costo_unitario_sistema) : '-';
         const safePrecioAct = item.precio_actualizado !== null ? formatter.format(item.precio_actualizado) : '-';
         const safeCostoTot = item.costo_total !== null ? formatter.format(item.costo_total) : '-';
+        
+        // NUEVA LÍNEA: Capturamos el método
+        const safeMetodo = item.metodo_ajuste || '-';
 
         if (item.costo_total !== null) totalAcumulado += item.costo_total;
 
@@ -206,7 +209,7 @@ function renderTable() {
             <td>${item.cantidad_utilizada}</td>
             <td>${safeCostoSist}</td>
             <td>${item.fecha_costo || '-'}</td>
-            <td>${safePrecioAct}</td>
+            <td><span style="background:#e2e8f0; padding:2px 6px; border-radius:4px; font-size:0.8rem;">${safeMetodo}</span></td> <td>${safePrecioAct}</td>
             <td><strong>${safeCostoTot}</strong></td>
             <td class="dropdown-cell">
                 <button class="btn-menu-action" onclick="toggleMenu(${index}, event)">⋮</button>

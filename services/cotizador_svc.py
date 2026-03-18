@@ -50,7 +50,6 @@ def get_descripcion_robusta(code):
     return ""
 
 def cotizador(items, dolar_hoy=None, inflacion_manual=None):
-    # Si nos pasan dólar (>0), lo usamos. Si no, ArgenStats.
     if dolar_hoy and float(dolar_hoy) > 0:
         valor_dolar = float(dolar_hoy)
     else:
@@ -60,6 +59,7 @@ def cotizador(items, dolar_hoy=None, inflacion_manual=None):
     cache_source = {}        
     cache_original = {}      
     cache_date = {}          
+    cache_metodo = {} # <-- NUEVO: Diccionario para guardar el método de ajuste
     codigos_padres = {}
     precios_finales = []
 
@@ -94,13 +94,13 @@ def cotizador(items, dolar_hoy=None, inflacion_manual=None):
     def resolve_unitario(code, recursion_stack):
         if code is None:
             cache[code] = 'Nada'
-            cache_source[code] = 'Nada'
+            cache_metodo[code] = 'Nada'
             return 'Nada'
         if code in cache:
             return cache[code]
         if code in recursion_stack:
             cache[code] = 'Nada'
-            cache_source[code] = 'Nada'
+            cache_metodo[code] = 'Nada'
             return 'Nada'
         recursion_stack.add(code)
 
@@ -132,22 +132,28 @@ def cotizador(items, dolar_hoy=None, inflacion_manual=None):
                         dias_diff = (pd.Timestamp.now() - fecha_compra).days
                         meses_diff = dias_diff / 30.44
                         
-                        if meses_diff < 3:
-                            # INFLACIÓN: Priorizar manual si viene del frontend
-                            # El frontend ya manda inflacion_manual como decimal (ej: 0.15 para 15%)
+                        # --- NUEVA LÓGICA DE MESES ---
+                        if meses_diff < 1:
+                            # Menos de 1 mes: No se toca
+                            precio = precio_raw
+                            cache_metodo[code] = "Sin actualizar"
+                        elif meses_diff < 3:
+                            # 1 a 3 meses: Inflación
                             if inflacion_manual and float(inflacion_manual) > 0:
                                 factor = (1 + float(inflacion_manual)) ** meses_diff
                             else:
                                 factor = argenstats_svc.get_inflation_factor(fecha_compra, pd.Timestamp.now())
-                            
                             precio = precio * factor
+                            cache_metodo[code] = "Inflación"
                         else:
-                            # DÓLAR: Usamos el valor resuelto
+                            # Más de 3 meses: Dólar
                             precio = (precio / HISTORIC_DOLAR) * valor_dolar
+                            cache_metodo[code] = "Dólar"
                     else:
                         cache_original[code] = float(precio_raw)
                         cache_date[code] = "Sin Fecha"
                         precio = (precio / HISTORIC_DOLAR) * valor_dolar
+                        cache_metodo[code] = "Dólar"
 
                     precio = float(round(precio, 2))
                     cache[code] = precio
@@ -169,6 +175,7 @@ def cotizador(items, dolar_hoy=None, inflacion_manual=None):
                 if not pd.isna(precio_raw):
                     cache_original[code] = float(precio_raw)
                     cache_date[code] = "Sin Fecha"
+                    cache_metodo[code] = "Dólar (Costo Inicial)" # Asumimos Dólar para los iniciales
                     if dolar_hoy is not None:
                         precio_ajustado = round((float(precio_raw) / HISTORIC_DOLAR) * float(dolar_hoy), 2)
                         cache[code] = precio_ajustado
@@ -188,14 +195,14 @@ def cotizador(items, dolar_hoy=None, inflacion_manual=None):
             fila_fab = pick_latest_row(resultado_fab, 'Número')
             if fila_fab is None:
                 cache[code] = 'Nada'
-                cache_source[code] = 'Nada'
+                cache_metodo[code] = 'Nada'
                 recursion_stack.remove(code)
                 return 'Nada'
             numero = fila_fab.get('Número', None)
             finalizada = get_finalizada_from_row(fila_fab)
             if pd.isna(numero) or numero is None or finalizada in (None, 0):
                 cache[code] = 'Nada'
-                cache_source[code] = 'Nada'
+                cache_metodo[code] = 'Nada'
                 recursion_stack.remove(code)
                 return 'Nada'
             
@@ -203,7 +210,7 @@ def cotizador(items, dolar_hoy=None, inflacion_manual=None):
             res_salidas = excel_store.df_salidas[filtro_pedido]
             if res_salidas.empty:
                 cache[code] = 'Nada'
-                cache_source[code] = 'Nada'
+                cache_metodo[code] = 'Nada'
                 recursion_stack.remove(code)
                 return 'Nada'
 
@@ -239,17 +246,18 @@ def cotizador(items, dolar_hoy=None, inflacion_manual=None):
                 cache_original[code] = float(orig_padre)
                 cache_date[code] = "FAB (Calculado)"
                 cache_source[code] = 'computed'
+                cache_metodo[code] = "Calculado (Sub-ítems)"
                 recursion_stack.remove(code)
                 return float(unitario_padre)
             else:
                 cache[code] = 'Nada'
-                cache_source[code] = 'Nada'
+                cache_metodo[code] = 'Nada'
                 recursion_stack.remove(code)
                 return 'Nada'
 
         # 4) nada
         cache[code] = 'Nada'
-        cache_source[code] = 'Nada'
+        cache_metodo[code] = 'Nada'
         recursion_stack.remove(code)
         return 'Nada'
 
@@ -257,16 +265,16 @@ def cotizador(items, dolar_hoy=None, inflacion_manual=None):
         unitario = resolve_unitario(codigo, set())
         precios_finales.append((codigo, unitario))
 
-    return precios_finales, codigos_padres, cache_source, cache_original, cache_date
+    # Devolvemos también el diccionario cache_metodo
+    return precios_finales, codigos_padres, cache_source, cache_original, cache_date, cache_metodo
 
 
 def procesar_cotizacion(req: CotizacionRequest, db: Session):
-    # Carga perezosa del Excel si aún no está en memoria
     from services.excel_service import load_excel_data
     load_excel_data()
 
-    # Validar y resolver
-    precios_obtenidos, mapa, source_map, original_map, date_map = cotizador(
+    # Recibimos el nuevo mapa de métodos
+    precios_obtenidos, mapa, source_map, original_map, date_map, metodo_map = cotizador(
         items=req.codigos_items, 
         dolar_hoy=req.dolar_hoy, 
         inflacion_manual=req.inflacion
@@ -276,11 +284,9 @@ def procesar_cotizacion(req: CotizacionRequest, db: Session):
     
     for codigo, precio in precios_obtenidos:
         descripcion = get_descripcion_robusta(codigo)
-        
-        # Asumiendo cantidad 1 para items main pasados
         cantidad_utilizada = 1.0
-        
         origen = source_map.get(codigo, 'Nada')
+        
         precio_final = precio
         if isinstance(precio, numbers.Real) and origen == 'ci':
             if req.dolar_hoy is not None:
@@ -295,6 +301,9 @@ def procesar_cotizacion(req: CotizacionRequest, db: Session):
         if isinstance(fecha_costo, pd.Timestamp):
             fecha_costo = fecha_costo.strftime('%Y-%m-%d')
             
+        # Obtenemos el método de ajuste
+        metodo = metodo_map.get(codigo, "-")
+
         def parse_to_float(val):
             return float(val) if isinstance(val, numbers.Real) else None
 
@@ -305,11 +314,11 @@ def procesar_cotizacion(req: CotizacionRequest, db: Session):
             costo_unitario_sistema=parse_to_float(costo_sistema),
             fecha_costo=str(fecha_costo),
             precio_actualizado=parse_to_float(precio_final),
-            costo_total=parse_to_float(costo_total)
+            costo_total=parse_to_float(costo_total),
+            metodo_ajuste=metodo  # Agregamos al response
         )
         items_res.append(item_data)
 
-    # Persistencia DB
     if req.guardar_db and req.conjunto_nombre and req.subconjunto_nombre:
         conjunto = db.query(models.Conjunto).filter(models.Conjunto.nombre == req.conjunto_nombre).first()
         if not conjunto:
@@ -343,13 +352,12 @@ def procesar_cotizacion(req: CotizacionRequest, db: Session):
             db.add(nueva_tarea)
         db.commit()
 
-    # Generación Excel
     archivo_descargable = None
     if req.exportar_excel:
         import base64
         df_out = pd.DataFrame([it.model_dump() for it in items_res])
-        # Renombrar columnas para más amigable
-        df_out.columns = ['Codigo', 'Descripcion', 'Cantidad Utilizada', 'Costo unitario sistema', 'Fecha del costo', 'Precio actualizado', 'Costo Total']
+        # Actualizamos las columnas del Excel para incluir el Método
+        df_out.columns = ['Codigo', 'Descripcion', 'Cantidad Utilizada', 'Costo unitario sistema', 'Fecha del costo', 'Precio actualizado', 'Costo Total', 'Metodo de Ajuste']
         buffer = io.BytesIO()
         df_out.to_excel(buffer, index=False)
         buffer.seek(0)
